@@ -160,6 +160,7 @@ td.big{font:800 20px var(--display)}
 .selwrap select{appearance:none;-webkit-appearance:none;padding-right:38px;text-overflow:ellipsis}
 .selwrap::after{content:"";position:absolute;right:16px;top:50%;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
 h2.sec.mt{margin-top:36px}
+.joke{margin-top:14px;font-style:italic}
 .tblwrap th,.tblwrap td{padding:10px 10px}
 .tblwrap th:first-child,.tblwrap td:first-child{padding-left:14px;width:100%}
 .lb li{display:block;padding:0}
@@ -418,6 +419,7 @@ function viewSeason(){
     s.rows.map(function(r){var d=r.c+r.x;return '<tr><td>'+esc(r.name)+(teamOf(r.name)?'<span class="tm-sub">'+esc(teamOf(r.name))+'</span>':'')+'</td><td class="big">'+r.c+'</td><td>'+(d?Math.round(r.c/d*100)+'%':'–')+'</td><td>'+r.wins+'</td></tr>'}).join("")+'</tbody></table></div>';
   h+='<h2 class="sec mt">Weekly winners</h2>';
   h+=s.ww.length?'<ul class="wins">'+s.ww.slice().reverse().map(function(w){return '<li><span class="wn">Week '+w.n+'</span><span>'+w.names.map(esc).join(" & ")+' · '+w.c+' of '+w.of+'</span></li>'}).join("")+'</ul>':'<p class="note">The first weekly winner gets crowned once every Week '+S.currentWeek+' game is final.</p>';
+  h+='<p class="note joke">For extra prizes give Josh your social security number.</p>';
   return h;
 }
 function renderBar(){
