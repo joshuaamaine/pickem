@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>NFL Pick'em 2026</title>
-<meta name="description" content="Weekly NFL pick'em for the group chat. Tap your winners, paste them in the chat, and track the weekly and season standings.">
+<meta name="description" content="Weekly NFL pick'em for the group chat. Pick your winners, save them, and track the weekly and season standings.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="NFL Pick'em 2026">
-<meta property="og:description" content="Tap your winners for this week's games and paste them in the group chat.">
+<meta property="og:description" content="Pick a winner for every game this week. Picks lock at kickoff.">
 <meta property="og:url" content="https://joshuaamaine.github.io/pickem/">
 <meta property="og:image" content="https://joshuaamaine.github.io/pickem/og.png">
 <meta property="og:image:width" content="1200">
@@ -150,17 +150,27 @@ td.big{font:800 20px var(--display)}
 @media (max-width:380px){.brand{font-size:56px}.tm .ab{font-size:24px}.go{padding:12px 12px;font-size:16px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
+.idrow{display:grid;grid-template-columns:minmax(0,1fr) 108px;gap:10px}
+.idnote{margin:8px 0 0}
+.bar-msg.bad{color:var(--bad)}
+.hidden-picks{margin:2px 0 4px;font-size:13px;color:var(--muted)}
 .loading{padding-block:22px}
 </style>
 </head>
 <body>
 <div id="app"><div class="wrap loading"><p class="eyebrow">NFL season · group chat pool</p><h1 class="brand">Pick’em</h1><p class="note" id="loading" role="status">Loading this week’s games…</p></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script>
 (function(){
 "use strict";
+/* Supabase project (the publishable key is meant to be public) */
+var SUPABASE_URL="%%SUPABASE_URL%%";
+var SUPABASE_KEY="%%SUPABASE_KEY%%";
+
 var TEAMS={ARI:["Cardinals","#97233F","#FFFFFF"],ATL:["Falcons","#A71930","#FFFFFF"],BAL:["Ravens","#241773","#FFFFFF"],BUF:["Bills","#00338D","#FFFFFF"],CAR:["Panthers","#0085CA","#FFFFFF"],CHI:["Bears","#0B162A","#FFFFFF"],CIN:["Bengals","#FB4F14","#111111"],CLE:["Browns","#311D00","#FFFFFF"],DAL:["Cowboys","#003594","#FFFFFF"],DEN:["Broncos","#FB4F14","#0A2343"],DET:["Lions","#0076B6","#FFFFFF"],GB:["Packers","#203731","#FFB612"],HOU:["Texans","#03202F","#FFFFFF"],IND:["Colts","#002C5F","#FFFFFF"],JAC:["Jaguars","#006778","#FFFFFF"],KC:["Chiefs","#E31837","#FFFFFF"],LV:["Raiders","#101010","#C9CED1"],LAC:["Chargers","#0080C6","#FFFFFF"],LA:["Rams","#003594","#FFD100"],MIA:["Dolphins","#008E97","#FFFFFF"],MIN:["Vikings","#4F2683","#FFC62F"],NE:["Patriots","#002244","#FFFFFF"],NO:["Saints","#D3BC8D","#101820"],NYG:["Giants","#0B2265","#FFFFFF"],NYJ:["Jets","#125740","#FFFFFF"],PHI:["Eagles","#004C54","#FFFFFF"],PIT:["Steelers","#FFB612","#101820"],SF:["49ers","#AA0000","#FFFFFF"],SEA:["Seahawks","#002244","#69BE28"],TB:["Buccaneers","#D50A0A","#FFFFFF"],TEN:["Titans","#0C2340","#FFFFFF"],WAS:["Commanders","#5A1414","#FFB612"]};
 var app=document.getElementById("app");
-var S=null,tab="picks",boardWeek=0,sheet=null,barMsg="",draft=null,DKEY="";
+var S=null,tab="picks",boardWeek=0,sheet=null,barMsg="",barErr=false,draft=null,DKEY="",saving=false,pollTimer=null;
+var db=null,DB={players:{},rows:[],loaded:false,err:"",at:0};
 
 function W(n){return S.weeks[String(n==null?S.currentWeek:n)]}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -178,31 +188,88 @@ function tbGame(wk){for(var i=0;i<wk.games.length;i++){if(wk.games[i].id===wk.ti
 function hasScore(g){return g.as!=null&&g.hs!=null}
 function resultText(g){var sc=hasScore(g)?" "+Math.max(g.as,g.hs)+"-"+Math.min(g.as,g.hs):"";return g.winner==="TIE"?"Tie"+sc:g.winner+" won"+sc}
 function pickedCount(wk,p){return wk.games.filter(function(g){return p[g.id]}).length}
+function nkey(s){return String(s||"").trim().toLowerCase()}
+
+/* ---------- database ---------- */
+function initDb(){
+  if(!/^https:\/\//.test(SUPABASE_URL)||!SUPABASE_KEY||SUPABASE_KEY.indexOf("%%")===0){DB.err="setup";return}
+  if(!window.supabase||!window.supabase.createClient){DB.err="load";return}
+  try{db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}})}catch(e){DB.err="load"}
+}
+async function loadDb(){
+  if(!db)return;
+  try{
+    var pr=await db.from("player_names").select("id,name");
+    if(pr.error)throw pr.error;
+    var rows=[],from=0;
+    for(;;){
+      var r=await db.from("pick_log").select("id,player_id,week,game_id,pick,created_at").eq("season",S.season).order("id",{ascending:true}).range(from,from+999);
+      if(r.error)throw r.error;
+      rows=rows.concat(r.data||[]);
+      if(!r.data||r.data.length<1000)break;
+      from+=1000;
+    }
+    var pl={};(pr.data||[]).forEach(function(p){pl[p.id]=p.name});
+    DB.players=pl;DB.rows=rows;DB.loaded=true;DB.err="";DB.at=Date.now();
+  }catch(e){DB.err="load"}
+}
+function lockAt(wk,gid){
+  if(gid==="tb"){var tg=tbGame(wk);return tg?Date.parse(tg.kickoff):Infinity}
+  for(var i=0;i<wk.games.length;i++){if(wk.games[i].id===gid)return Date.parse(wk.games[i].kickoff)}
+  return -Infinity;
+}
+/* Each person's picks for a week: the latest pick saved before that game kicked off. */
+function weekEntries(n){
+  var wk=W(n),byId={};
+  DB.rows.forEach(function(r){
+    if(r.week!==n)return;
+    if(Date.parse(r.created_at)>=lockAt(wk,r.game_id))return;
+    var o=byId[r.player_id]||(byId[r.player_id]={p:{},tb:null});
+    if(r.game_id==="tb")o.tb=Number(r.pick);else o.p[r.game_id]=r.pick;
+  });
+  var out={};
+  Object.keys(byId).forEach(function(id){out[DB.players[id]||"Someone"]=byId[id]});
+  var manual=wk.picks||{};
+  Object.keys(manual).forEach(function(name){
+    var dup=Object.keys(out).filter(function(k){return nkey(k)===nkey(name)})[0];
+    if(!dup)out[name]=manual[name];
+  });
+  return out;
+}
+function playerIdFor(name){var k=nkey(name);if(!k)return null;var ids=Object.keys(DB.players);for(var i=0;i<ids.length;i++){if(nkey(DB.players[ids[i]])===k)return ids[i]}return null}
+function myServer(){var id=playerIdFor(draft.name);if(!id)return null;return weekEntries(S.currentWeek)[DB.players[id]]||{p:{},tb:null}}
+function unsaved(){
+  if(!DB.loaded)return false;
+  var wk=W(),sv=myServer()||{p:{},tb:null},diff=false;
+  wk.games.forEach(function(g){if(!locked(g)&&draft.p[g.id]&&draft.p[g.id]!==sv.p[g.id])diff=true});
+  var tg=tbGame(wk);
+  if(tg&&!locked(tg)&&draft.tb!==""&&Number(draft.tb)!==sv.tb)diff=true;
+  return diff;
+}
 
 /* ---------- scoring ---------- */
 function standings(n){
-  var wk=W(n);
+  var wk=W(n),entries=weekEntries(n);
   var decided=wk.games.filter(function(g){return g.winner}).length;
   var fin=decided===wk.games.length;
-  var picks=wk.picks||{};
-  var rows=Object.keys(picks).map(function(name){
-    var e=picks[name],c=0,x=0,open=0;
+  var rows=Object.keys(entries).map(function(name){
+    var e=entries[name],c=0,x=0,open=0;
     wk.games.forEach(function(g){var p=e.p[g.id];if(!p)return;if(!g.winner){open++;return}if(p===g.winner)c++;else x++});
     var diff=(wk.mnfTotal!=null&&e.tb!=null&&e.tb!=="")?Math.abs(Number(e.tb)-wk.mnfTotal):null;
-    return {name:name,c:c,x:x,open:open,tb:e.tb,diff:diff};
+    return {name:name,c:c,x:x,open:open,tb:e.tb,diff:diff,n:pickedCount(wk,e.p)};
   });
   function dv(r){return r.diff==null?1e9:r.diff}
   rows.sort(function(a,b){if(b.c!==a.c)return b.c-a.c;if(dv(a)!==dv(b))return dv(a)-dv(b);return a.name.localeCompare(b.name)});
   rows.forEach(function(r,i){if(i===0){r.rank=1;return}var p=rows[i-1];r.rank=(p.c===r.c&&dv(p)===dv(r))?p.rank:i+1});
   var winners=fin&&rows.length?rows.filter(function(r){return r.rank===1}).map(function(r){return r.name}):[];
-  return {wk:wk,rows:rows,decided:decided,fin:fin,winners:winners};
+  return {wk:wk,entries:entries,rows:rows,decided:decided,fin:fin,winners:winners};
 }
 function season(){
   var m={},ww=[];
   Object.keys(S.weeks).map(Number).sort(function(a,b){return a-b}).forEach(function(n){
     var st=standings(n);
-    st.rows.forEach(function(r){var k=r.name.toLowerCase();var o=m[k]||(m[k]={name:r.name,c:0,x:0,wins:0});o.name=r.name;o.c+=r.c;o.x+=r.x});
-    if(st.fin&&st.winners.length){st.winners.forEach(function(w){m[w.toLowerCase()].wins++});ww.push({n:n,names:st.winners,c:st.rows[0].c,of:st.wk.games.length})}
+    st.rows.forEach(function(r){var k=nkey(r.name);var o=m[k]||(m[k]={name:r.name,c:0,x:0,wins:0});o.name=r.name;o.c+=r.c;o.x+=r.x});
+    if(st.fin&&st.winners.length){st.winners.forEach(function(w){m[nkey(w)].wins++});ww.push({n:n,names:st.winners,c:st.rows[0].c,of:st.wk.games.length})}
   });
   var rows=Object.keys(m).map(function(k){return m[k]}).sort(function(a,b){return b.c-a.c||b.wins-a.wins||a.name.localeCompare(b.name)});
   return {rows:rows,ww:ww};
@@ -235,16 +302,22 @@ function renderView(){
   var v=document.getElementById("view");if(!v)return;
   v.innerHTML=tab==="board"?viewBoard():tab==="season"?viewSeason():viewPicks();
 }
+function whoNote(){
+  if(!DB.loaded||!draft.name.trim())return "";
+  return playerIdFor(draft.name)?'Welcome back. Enter your PIN to save changes.':'New here? Pick any 4 digits. You’ll need this PIN to change your picks later.';
+}
 function viewPicks(){
   var wk=W();
-  var h='<p class="lede">Tap who you think wins each game. When you’re done, copy your picks and paste them in the group chat. Picks lock at each game’s kickoff.</p>';
-  h+='<label class="lbl" for="pk-name">Your name</label><input class="field" id="pk-name" autocomplete="nickname" maxlength="24" placeholder="The name the group knows you by" value="'+esc(draft.name)+'"><p class="err" id="pk-name-err" hidden>Add your name so everyone knows whose picks these are.</p>';
+  var h='<p class="lede">Tap who you think wins each game, then save. You can change any pick until that game kicks off.</p>';
+  h+='<div class="idrow"><div class="idname"><label class="lbl" for="pk-name">Your name</label><input class="field" id="pk-name" autocomplete="nickname" maxlength="24" placeholder="The name the group knows you by" value="'+esc(draft.name)+'"></div>'+
+     '<div class="idpin"><label class="lbl" for="pk-pin">PIN</label><input class="field" id="pk-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="4 digits" value="'+esc(draft.pin)+'"></div></div>';
+  h+='<p class="note idnote" id="pk-who">'+esc(whoNote())+'</p><p class="err" id="pk-err" hidden></p>';
   var out="",cur="";
   wk.games.forEach(function(g){var d=fmtDay(g.kickoff);if(d!==cur){if(cur)out+='</div>';out+='<h3 class="day">'+esc(d)+'</h3><div class="games">';cur=d}out+=gameCard(g)});
   if(cur)out+='</div>';
   h+=out;
   var tg=tbGame(wk);
-  if(tg)h+='<div class="tb-card"><label class="lbl" for="pk-tb">Tiebreaker</label><p>Total points scored in '+tg.away+' @ '+tg.home+(tg.slot==="MNF"?' on Monday night':'')+'. If two people tie on correct picks, the closest guess wins the week.</p><input class="field" id="pk-tb" inputmode="numeric" maxlength="3" placeholder="e.g. 44" value="'+esc(draft.tb)+'"></div>';
+  if(tg)h+='<div class="tb-card"><label class="lbl" for="pk-tb">Tiebreaker</label><p>Total points scored in '+tg.away+' @ '+tg.home+(tg.slot==="MNF"?' on Monday night':'')+'. If two people tie on correct picks, the closest guess wins the week.</p><input class="field" id="pk-tb" inputmode="numeric" maxlength="3" placeholder="e.g. 44" value="'+esc(draft.tb)+'"'+(locked(tg)?' disabled':'')+'></div>';
   return h;
 }
 function gameCard(g){
@@ -257,6 +330,12 @@ function teamBtn(g,c,home,pick,lk){
   var cls="tm"+(home?" h":"")+(on?" on":(pick?" off":""));
   return '<button type="button" class="'+cls+'" data-g="'+g.id+'" data-t="'+c+'" style="'+tstyle(c)+'" aria-pressed="'+on+'"'+(lk?' disabled':'')+'><span class="ab">'+c+'</span><span class="nm">'+esc(t.name)+'</span></button>';
 }
+function dbNotice(){
+  if(DB.err==="setup")return '<p class="note">Saving isn’t switched on yet, so the board is empty for now.</p>';
+  if(DB.err==="load")return '<p class="err">Couldn’t reach the picks database. Check your connection and refresh.</p>';
+  if(!DB.loaded)return '<p class="note">Loading picks…</p>';
+  return '';
+}
 function viewBoard(){
   var weeks=Object.keys(S.weeks).map(Number).sort(function(a,b){return a-b});
   if(!S.weeks[String(boardWeek)])boardWeek=S.currentWeek;
@@ -265,33 +344,38 @@ function viewBoard(){
   var st=standings(boardWeek),wk=st.wk;
   var status=st.fin?'Final':st.decided?st.decided+' of '+wk.games.length+' games final':'Kicks off '+fmtShortDay(wk.games[0].kickoff);
   h+='<div class="sechd"><h2>Week '+boardWeek+' standings</h2><span class="pill">'+esc(status)+'</span></div>';
+  h+=dbNotice();
   if(!st.rows.length){
-    h+='<div class="empty"><b>No picks on the board yet</b>Make your picks on the Picks tab and paste them in the group chat. Everyone’s picks show up here with a running score once the commish posts them.</div>';
+    h+='<div class="empty"><b>No picks in yet</b>Make your picks on the Picks tab and tap Save. Everyone who’s in shows up here, and scores update as games go final.</div>';
     return h;
   }
   h+='<ol class="lb">'+st.rows.map(function(r){
     var isW=st.winners.indexOf(r.name)>=0,lead=!st.fin&&st.decided>0&&r.rank===1;
-    var sub=(r.c+r.x)?r.c+' right, '+r.x+' wrong':'No games final yet';
-    if(r.open)sub+=' · '+r.open+' to play';
-    if(r.tb!=null&&r.tb!=="")sub+=' · tiebreaker '+r.tb;
-    return '<li class="'+(r.rank===1?'top':'')+'"><span class="rk">'+r.rank+'</span><div class="who"><div class="n"><span>'+esc(r.name)+'</span>'+(isW?'<span class="pill win">Week '+boardWeek+' winner</span>':lead?'<span class="pill">Leading</span>':'')+'</div><div class="s">'+esc(sub)+'</div></div><div class="score">'+r.c+'<small>correct</small></div></li>';
+    var sub=(r.c+r.x)?r.c+' right, '+r.x+' wrong':r.n+' of '+wk.games.length+' picked';
+    if(r.open&&(r.c+r.x))sub+=' · '+r.open+' to play';
+    var tg=tbGame(wk);
+    if(r.tb!=null&&r.tb!==""&&tg&&locked(tg))sub+=' · tiebreaker '+r.tb;
+    return '<li class="'+(r.rank===1&&st.decided?'top':'')+'"><span class="rk">'+(st.decided?r.rank:'•')+'</span><div class="who"><div class="n"><span>'+esc(r.name)+'</span>'+(isW?'<span class="pill win">Week '+boardWeek+' winner</span>':lead?'<span class="pill">Leading</span>':'')+'</div><div class="s">'+esc(sub)+'</div></div><div class="score">'+r.c+'<small>correct</small></div></li>';
   }).join("")+'</ol>';
-  h+='<h2 class="sec mt">Game by game</h2><div class="games">'+wk.games.map(function(g){return boardGame(g,wk)}).join("")+'</div>';
+  h+='<h2 class="sec mt">Game by game</h2><p class="note">Everyone’s picks for a game show up once it kicks off.</p><div class="games">'+wk.games.map(function(g){return boardGame(g,st.entries)}).join("")+'</div>';
   return h;
 }
-function boardGame(g,wk){
-  var by={};by[g.away]=[];by[g.home]=[];
-  Object.keys(wk.picks).forEach(function(n){var p=wk.picks[n].p[g.id];if(p&&by[p])by[p].push(n)});
-  var r=g.winner?resultText(g):locked(g)?'Waiting on the result':fmtShortDay(g.kickoff)+', '+fmtTime(g.kickoff);
+function boardGame(g,entries){
+  var by={},count=0;by[g.away]=[];by[g.home]=[];
+  Object.keys(entries).forEach(function(n){var p=entries[n].p[g.id];if(p&&by[p]){by[p].push(n);count++}});
+  var lk=locked(g);
+  var r=g.winner?resultText(g):lk?'Waiting on the result':fmtShortDay(g.kickoff)+', '+fmtTime(g.kickoff);
+  var head='<div class="gb-h"><span class="m">'+g.away+' @ '+g.home+'</span><span class="r">'+esc(r)+'</span></div>';
+  if(!lk)return '<div class="gb">'+head+'<p class="hidden-picks">'+count+' pick'+(count===1?'':'s')+' in · revealed at kickoff</p></div>';
   function side(c){
     var cls='side'+(g.winner?(g.winner===c?' won':' lost'):''),has=by[c].length;
     return '<div class="'+cls+'"><span class="tchip" style="'+tstyle(c)+'">'+c+'</span><span class="names'+(has?'':' none')+'">'+(has?by[c].map(esc).join(", "):'No one')+'</span><span class="cnt">'+has+'</span></div>';
   }
-  return '<div class="gb"><div class="gb-h"><span class="m">'+g.away+' @ '+g.home+'</span><span class="r">'+esc(r)+'</span></div>'+side(g.away)+side(g.home)+'</div>';
+  return '<div class="gb">'+head+side(g.away)+side(g.home)+'</div>';
 }
 function viewSeason(){
   var s=season();
-  var h='<div class="sechd"><h2>'+S.season+' season</h2></div>';
+  var h='<div class="sechd"><h2>'+S.season+' season</h2></div>'+dbNotice();
   if(!s.rows.length)return h+'<div class="empty"><b>The table starts with the first picks</b>Every correct pick counts toward your season total, and each week’s winner banks a weekly win.</div>';
   h+='<div class="tblwrap"><table><thead><tr><th scope="col">Player</th><th scope="col">Correct</th><th scope="col">Hit rate</th><th scope="col">Week wins</th></tr></thead><tbody>'+
     s.rows.map(function(r){var d=r.c+r.x;return '<tr><td>'+esc(r.name)+'</td><td class="big">'+r.c+'</td><td>'+(d?Math.round(r.c/d*100)+'%':'–')+'</td><td>'+r.wins+'</td></tr>'}).join("")+'</tbody></table></div>';
@@ -303,16 +387,26 @@ function renderBar(){
   var b=document.getElementById("bar");if(!b)return;
   if(tab!=="picks"){b.innerHTML="";return}
   var wk=W(),n=pickedCount(wk,draft.p),tot=wk.games.length;
-  b.innerHTML='<div class="bar"><div class="bar-in"><div class="prog"><b>'+n+'</b> of '+tot+' picked<div class="meter"><i style="width:'+Math.round(n/tot*100)+'%"></i></div></div><button type="button" class="go" data-act="copy">Copy my picks</button></div>'+(barMsg?'<p class="bar-msg" role="status">'+esc(barMsg)+'</p>':'')+'</div>';
+  var label=saving?'Saving':db&&DB.loaded?'Save picks':'Copy my picks';
+  var state=barMsg;
+  if(!state&&DB.loaded&&n){state=unsaved()?'You have unsaved changes.':(playerIdFor(draft.name)?'All your picks are saved.':'')}
+  b.innerHTML='<div class="bar"><div class="bar-in"><div class="prog"><b>'+n+'</b> of '+tot+' picked<div class="meter"><i style="width:'+Math.round(n/tot*100)+'%"></i></div></div><button type="button" class="go" data-act="save"'+(saving?' disabled':'')+'>'+label+'</button></div>'+(state?'<p class="bar-msg'+(barErr?' bad':'')+'" role="status">'+esc(state)+'</p>':'')+'</div>';
 }
 function renderLayer(){
   var l=document.getElementById("layer");if(!l)return;
   if(!sheet){l.innerHTML="";return}
-  var wk=W(),left=wk.games.length-pickedCount(wk,draft.p);
-  var head=sheet.copied===true?'Copied. Now paste it in the group chat.':sheet.copied===false?'Copy this message':'Your picks message';
-  var tip=sheet.copied===false?'Tap and hold the text, choose Select All, then Copy. Paste it in the group chat.':'Open the group chat, tap the message box and choose Paste.';
-  if(left>0)tip+=' You left '+left+' game'+(left===1?'':'s')+' blank.';
-  l.innerHTML='<div class="scrim" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-h"><div class="sheet-in"><h2 id="sh-h">'+head+'</h2><p>'+esc(tip)+'</p><textarea class="msgbox" id="sh-text" readonly rows="4">'+esc(sheet.text)+'</textarea><div class="row"><button type="button" class="btn" data-act="copy-again">Copy again</button><button type="button" class="go" data-act="close" id="sh-done">Done</button></div></div></div>';
+  var wk=W(),left=wk.games.length-pickedCount(wk,draft.p),h="",tip="";
+  if(sheet.kind==="saved"){
+    h='Picks saved';
+    tip='You’re on the board. Change any pick before its kickoff and save again.';
+    if(left>0)tip+=' You still have '+left+' game'+(left===1?'':'s')+' open.';
+    tip+=' Want to talk trash? Copy your picks into the group chat.';
+  }else{
+    h=sheet.copied===true?'Copied. Now paste it in the group chat.':sheet.copied===false?'Copy this message':'Your picks message';
+    tip=sheet.copied===false?'Tap and hold the text, choose Select All, then Copy.':'Open the group chat, tap the message box and choose Paste.';
+  }
+  var copied=sheet.kind==="saved"&&sheet.copied===true?' Copied.':'';
+  l.innerHTML='<div class="scrim" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-h"><div class="sheet-in"><h2 id="sh-h">'+h+'</h2><p>'+esc(tip+copied)+'</p><textarea class="msgbox" id="sh-text" readonly rows="4">'+esc(sheet.text)+'</textarea><div class="row"><button type="button" class="btn" data-act="copy-again">'+(sheet.kind==="saved"?'Copy for the chat':'Copy again')+'</button><button type="button" class="go" data-act="close" id="sh-done">Done</button></div></div></div>';
 }
 function selectSheet(){var t=document.getElementById("sh-text");if(t){try{t.focus();t.select();t.setSelectionRange(0,t.value.length)}catch(e){}}}
 function copyText(text){
@@ -323,10 +417,57 @@ function copyText(text){
   }catch(e){setTimeout(function(){done(false)},0)}
 }
 function setTab(t){
-  tab=t;barMsg="";
+  tab=t;barMsg="";barErr=false;
   renderTabs();renderView();renderBar();
   try{history.replaceState(null,"",t==="picks"?location.pathname:"#"+t)}catch(e){}
   var hd=app.querySelector(".hd");if(hd&&window.scrollY>hd.offsetHeight)window.scrollTo(0,hd.offsetHeight);
+  if(t!=="picks"&&db&&Date.now()-DB.at>30000)refresh();
+}
+function refresh(){return loadDb().then(function(){if(tab!=="picks")renderView();else{var w=document.getElementById("pk-who");if(w)w.textContent=whoNote()}renderBar()})}
+function showErr(m){var e=document.getElementById("pk-err");if(e){e.textContent=m;e.hidden=!m}}
+
+/* ---------- saving ---------- */
+function save(){
+  var wk=W(),n=pickedCount(wk,draft.p);
+  showErr("");barMsg="";barErr=false;
+  if(!draft.name.trim()){showErr("Add your name so everyone knows whose picks these are.");focusEl("pk-name");return}
+  if(!n){barMsg="Pick at least one game first.";barErr=true;renderBar();return}
+  if(!db||!DB.loaded){sheet={kind:"copy",text:buildMsg(),copied:null};copyText(sheet.text);renderLayer();return}
+  if(!/^\d{4}$/.test(draft.pin)){showErr("Enter a 4-digit PIN. If you’re new, pick any 4 digits and remember them.");focusEl("pk-pin");return}
+  var payload={};
+  wk.games.forEach(function(g){if(!locked(g)&&draft.p[g.id])payload[g.id]=draft.p[g.id]});
+  var tg=tbGame(wk);
+  if(tg&&!locked(tg)&&draft.tb!=="")payload.tb=String(Number(draft.tb));
+  if(!Object.keys(payload).length){barMsg="Those games have already kicked off.";barErr=true;renderBar();return}
+  saving=true;renderBar();
+  db.rpc("submit_picks",{p_name:draft.name.trim(),p_pin:draft.pin,p_season:S.season,p_week:S.currentWeek,p_picks:payload}).then(function(res){
+    if(res.error)throw res.error;
+    return loadDb().then(function(){
+      saving=false;
+      if(res.data&&res.data.name)draft.name=res.data.name;
+      saveDraft();
+      sheet={kind:"saved",text:buildMsg(),copied:null};
+      renderView();renderBar();renderLayer();
+      var d=document.getElementById("sh-done");if(d)d.focus({preventScroll:true});
+    });
+  }).catch(function(e){
+    saving=false;
+    var m=String((e&&(e.message||e.details))||"");
+    if(m.indexOf("wrong_pin")>=0){showErr("That PIN doesn’t match the one "+draft.name.trim()+" used before. Ask Josh to reset it if you forgot.");focusEl("pk-pin")}
+    else if(m.indexOf("bad_pin")>=0){showErr("Your PIN needs to be exactly 4 digits.");focusEl("pk-pin")}
+    else if(m.indexOf("bad_name")>=0){showErr("Names can be up to 24 characters.");focusEl("pk-name")}
+    else{barMsg="Couldn’t save. Check your connection and try again.";barErr=true}
+    renderBar();
+  });
+}
+function focusEl(id){var el=document.getElementById(id);if(el){el.scrollIntoView({block:"center"});el.focus({preventScroll:true})}}
+function prefillFromServer(){
+  if(!DB.loaded)return false;
+  var sv=myServer();if(!sv)return false;
+  var any=Object.keys(draft.p).length>0;
+  if(any)return false;
+  draft.p=Object.assign({},sv.p);if(draft.tb===""&&sv.tb!=null)draft.tb=String(sv.tb);
+  saveDraft();return true;
 }
 
 /* ---------- events ---------- */
@@ -338,27 +479,26 @@ app.addEventListener("click",function(e){
     if(draft.p[g]===t)delete draft.p[g];else draft.p[g]=t;
     var p=draft.p[g];
     app.querySelectorAll('.tm[data-g="'+g+'"]').forEach(function(btn){var on=p===btn.dataset.t;btn.classList.toggle("on",on);btn.classList.toggle("off",!!p&&!on);btn.setAttribute("aria-pressed",String(on))});
-    saveDraft();barMsg="";renderBar();
+    saveDraft();barMsg="";barErr=false;renderBar();
     return;
   }
   var act=b.dataset.act;
-  if(act==="copy"){
-    if(!draft.name.trim()){var er=document.getElementById("pk-name-err");if(er)er.hidden=false;var ni=document.getElementById("pk-name");if(ni){ni.scrollIntoView({block:"center"});ni.focus({preventScroll:true})}return}
-    if(!pickedCount(W(),draft.p)){barMsg="Pick at least one game first.";renderBar();return}
-    sheet={text:buildMsg(),copied:null};
-    copyText(sheet.text);
-    renderLayer();
-    var d=document.getElementById("sh-done");if(d)d.focus({preventScroll:true});
-  }else if(act==="copy-again"){if(sheet){sheet.copied=null;copyText(sheet.text);renderLayer()}}
+  if(act==="save"){save()}
+  else if(act==="copy-again"){if(sheet){sheet.copied=null;copyText(sheet.text);renderLayer()}}
   else if(act==="close"){sheet=null;renderLayer()}
   else if(act==="bw"){boardWeek=Number(b.dataset.w);renderView()}
 });
 app.addEventListener("input",function(e){
   var el=e.target;
-  if(el.id==="pk-name"){draft.name=el.value;saveDraft();lsSet("pickem26-name",el.value);var er=document.getElementById("pk-name-err");if(er)er.hidden=true}
-  else if(el.id==="pk-tb"){var d=el.value.replace(/\D/g,"").slice(0,3);if(d!==el.value)el.value=d;draft.tb=d;saveDraft()}
+  if(el.id==="pk-name"){draft.name=el.value;saveDraft();lsSet("pickem26-name",el.value);showErr("");var w=document.getElementById("pk-who");if(w)w.textContent=whoNote();renderBar()}
+  else if(el.id==="pk-pin"){var d0=el.value.replace(/\D/g,"").slice(0,4);if(d0!==el.value)el.value=d0;draft.pin=d0;saveDraft();lsSet("pickem26-pin",d0);showErr("")}
+  else if(el.id==="pk-tb"){var d=el.value.replace(/\D/g,"").slice(0,3);if(d!==el.value)el.value=d;draft.tb=d;saveDraft();renderBar()}
+});
+app.addEventListener("change",function(e){
+  if(e.target.id==="pk-name"&&prefillFromServer()){renderView();renderBar()}
 });
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&sheet){sheet=null;renderLayer()}});
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&db&&Date.now()-DB.at>30000)refresh()});
 
 /* ---------- start ---------- */
 function start(data){
@@ -366,11 +506,15 @@ function start(data){
   DKEY="pickem26-draft-w"+S.currentWeek;
   draft=lsGet(DKEY)||{};
   if(typeof draft.name!=="string")draft.name=lsGet("pickem26-name")||"";
+  if(typeof draft.pin!=="string")draft.pin=lsGet("pickem26-pin")||"";
   if(!draft.p||typeof draft.p!=="object")draft.p={};
   if(draft.tb==null)draft.tb="";
   var h=(location.hash||"").replace("#","");
   if(h==="board"||h==="season")tab=h;
+  initDb();
   renderShell();
+  if(db)loadDb().then(function(){prefillFromServer();renderView();renderBar()});
+  pollTimer=setInterval(function(){if(!document.hidden&&tab!=="picks"&&db)refresh()},60000);
 }
 fetch("state.json?t="+Date.now(),{cache:"no-store"}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}).then(start).catch(function(){
   var m=document.getElementById("loading");if(m)m.textContent="Couldn’t load this week’s games. Check your connection and refresh.";
