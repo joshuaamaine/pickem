@@ -155,6 +155,11 @@ td.big{font:800 20px var(--display)}
 .bar-msg.bad{color:var(--bad)}
 .hidden-picks{margin:2px 0 4px;font-size:13px;color:var(--muted)}
 .loading{padding-block:22px}
+.idrow{grid-template-columns:minmax(0,1fr) 96px}
+.selwrap{position:relative}
+.selwrap select{appearance:none;-webkit-appearance:none;padding-right:38px;text-overflow:ellipsis}
+.selwrap::after{content:"";position:absolute;right:16px;top:50%;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.tm-sub{display:block;font-size:12px;color:var(--muted);font-weight:400}
 </style>
 </head>
 <body>
@@ -189,6 +194,9 @@ function hasScore(g){return g.as!=null&&g.hs!=null}
 function resultText(g){var sc=hasScore(g)?" "+Math.max(g.as,g.hs)+"-"+Math.min(g.as,g.hs):"";return g.winner==="TIE"?"Tie"+sc:g.winner+" won"+sc}
 function pickedCount(wk,p){return wk.games.filter(function(g){return p[g.id]}).length}
 function nkey(s){return String(s||"").trim().toLowerCase()}
+function roster(){return (S.league||[]).slice().sort(function(a,b){return a.name.localeCompare(b.name)})}
+function member(name){var k=nkey(name),l=S.league||[];for(var i=0;i<l.length;i++){if(nkey(l[i].name)===k)return l[i]}return null}
+function teamOf(name){var m=member(name);return m?m.team:""}
 
 /* ---------- database ---------- */
 function initDb(){
@@ -309,7 +317,7 @@ function whoNote(){
 function viewPicks(){
   var wk=W();
   var h='<p class="lede">Tap who you think wins each game, then save. You can change any pick until that game kicks off.</p>';
-  h+='<div class="idrow"><div class="idname"><label class="lbl" for="pk-name">Your name</label><input class="field" id="pk-name" autocomplete="nickname" maxlength="24" placeholder="The name the group knows you by" value="'+esc(draft.name)+'"></div>'+
+  h+='<div class="idrow"><div class="idname"><label class="lbl" for="pk-name">Who are you?</label><div class="selwrap"><select class="field" id="pk-name"><option value="">Choose your name</option>'+roster().map(function(m){return '<option value="'+esc(m.name)+'"'+(nkey(m.name)===nkey(draft.name)?' selected':'')+'>'+esc(m.name)+' ('+esc(m.team)+')</option>'}).join("")+'</select></div></div>'+
      '<div class="idpin"><label class="lbl" for="pk-pin">PIN</label><input class="field" id="pk-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="4 digits" value="'+esc(draft.pin)+'"></div></div>';
   h+='<p class="note idnote" id="pk-who">'+esc(whoNote())+'</p><p class="err" id="pk-err" hidden></p>';
   var out="",cur="";
@@ -355,7 +363,7 @@ function viewBoard(){
     if(r.open&&(r.c+r.x))sub+=' · '+r.open+' to play';
     var tg=tbGame(wk);
     if(r.tb!=null&&r.tb!==""&&tg&&locked(tg))sub+=' · tiebreaker '+r.tb;
-    return '<li class="'+(r.rank===1&&st.decided?'top':'')+'"><span class="rk">'+(st.decided?r.rank:'•')+'</span><div class="who"><div class="n"><span>'+esc(r.name)+'</span>'+(isW?'<span class="pill win">Week '+boardWeek+' winner</span>':lead?'<span class="pill">Leading</span>':'')+'</div><div class="s">'+esc(sub)+'</div></div><div class="score">'+r.c+'<small>correct</small></div></li>';
+    return '<li class="'+(r.rank===1&&st.decided?'top':'')+'"><span class="rk">'+(st.decided?r.rank:'•')+'</span><div class="who"><div class="n"><span>'+esc(r.name)+'</span>'+(isW?'<span class="pill win">Week '+boardWeek+' winner</span>':lead?'<span class="pill">Leading</span>':'')+'</div><div class="s">'+esc((teamOf(r.name)?teamOf(r.name)+' \u00B7 ':'')+sub)+'</div></div><div class="score">'+r.c+'<small>correct</small></div></li>';
   }).join("")+'</ol>';
   h+='<h2 class="sec mt">Game by game</h2><p class="note">Everyone’s picks for a game show up once it kicks off.</p><div class="games">'+wk.games.map(function(g){return boardGame(g,st.entries)}).join("")+'</div>';
   return h;
@@ -378,7 +386,7 @@ function viewSeason(){
   var h='<div class="sechd"><h2>'+S.season+' season</h2></div>'+dbNotice();
   if(!s.rows.length)return h+'<div class="empty"><b>The table starts with the first picks</b>Every correct pick counts toward your season total, and each week’s winner banks a weekly win.</div>';
   h+='<div class="tblwrap"><table><thead><tr><th scope="col">Player</th><th scope="col">Correct</th><th scope="col">Hit rate</th><th scope="col">Week wins</th></tr></thead><tbody>'+
-    s.rows.map(function(r){var d=r.c+r.x;return '<tr><td>'+esc(r.name)+'</td><td class="big">'+r.c+'</td><td>'+(d?Math.round(r.c/d*100)+'%':'–')+'</td><td>'+r.wins+'</td></tr>'}).join("")+'</tbody></table></div>';
+    s.rows.map(function(r){var d=r.c+r.x;return '<tr><td>'+esc(r.name)+(teamOf(r.name)?'<span class="tm-sub">'+esc(teamOf(r.name))+'</span>':'')+'</td><td class="big">'+r.c+'</td><td>'+(d?Math.round(r.c/d*100)+'%':'–')+'</td><td>'+r.wins+'</td></tr>'}).join("")+'</tbody></table></div>';
   h+='<h2 class="sec mt">Weekly winners</h2>';
   h+=s.ww.length?'<ul class="wins">'+s.ww.slice().reverse().map(function(w){return '<li><span class="wn">Week '+w.n+'</span><span>'+w.names.map(esc).join(" & ")+' · '+w.c+' of '+w.of+'</span></li>'}).join("")+'</ul>':'<p class="note">The first weekly winner gets crowned once every Week '+S.currentWeek+' game is final.</p>';
   return h;
@@ -430,7 +438,7 @@ function showErr(m){var e=document.getElementById("pk-err");if(e){e.textContent=
 function save(){
   var wk=W(),n=pickedCount(wk,draft.p);
   showErr("");barMsg="";barErr=false;
-  if(!draft.name.trim()){showErr("Add your name so everyone knows whose picks these are.");focusEl("pk-name");return}
+  if(!draft.name.trim()){showErr("Choose your name from the list first.");focusEl("pk-name");return}
   if(!n){barMsg="Pick at least one game first.";barErr=true;renderBar();return}
   if(!db||!DB.loaded){sheet={kind:"copy",text:buildMsg(),copied:null};copyText(sheet.text);renderLayer();return}
   if(!/^\d{4}$/.test(draft.pin)){showErr("Enter a 4-digit PIN. If you’re new, pick any 4 digits and remember them.");focusEl("pk-pin");return}
@@ -490,12 +498,16 @@ app.addEventListener("click",function(e){
 });
 app.addEventListener("input",function(e){
   var el=e.target;
-  if(el.id==="pk-name"){draft.name=el.value;saveDraft();lsSet("pickem26-name",el.value);showErr("");var w=document.getElementById("pk-who");if(w)w.textContent=whoNote();renderBar()}
-  else if(el.id==="pk-pin"){var d0=el.value.replace(/\D/g,"").slice(0,4);if(d0!==el.value)el.value=d0;draft.pin=d0;saveDraft();lsSet("pickem26-pin",d0);showErr("")}
+  if(el.id==="pk-pin"){var d0=el.value.replace(/\D/g,"").slice(0,4);if(d0!==el.value)el.value=d0;draft.pin=d0;saveDraft();lsSet("pickem26-pin",d0);showErr("")}
   else if(el.id==="pk-tb"){var d=el.value.replace(/\D/g,"").slice(0,3);if(d!==el.value)el.value=d;draft.tb=d;saveDraft();renderBar()}
 });
 app.addEventListener("change",function(e){
-  if(e.target.id==="pk-name"&&prefillFromServer()){renderView();renderBar()}
+  var el=e.target;if(el.id!=="pk-name")return;
+  var prev=nkey(draft.name);
+  draft.name=el.value;
+  if(prev&&nkey(el.value)!==prev){draft.p={};draft.tb="";draft.pin=""}
+  saveDraft();lsSet("pickem26-name",el.value);showErr("");
+  prefillFromServer();renderView();renderBar();
 });
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&sheet){sheet=null;renderLayer()}});
 document.addEventListener("visibilitychange",function(){if(!document.hidden&&db&&Date.now()-DB.at>30000)refresh()});
@@ -509,6 +521,8 @@ function start(data){
   if(typeof draft.pin!=="string")draft.pin=lsGet("pickem26-pin")||"";
   if(!draft.p||typeof draft.p!=="object")draft.p={};
   if(draft.tb==null)draft.tb="";
+  if(S.league&&S.league.length&&draft.name&&!member(draft.name)){draft.name="";draft.p={};draft.tb=""}
+  if(member(draft.name))draft.name=member(draft.name).name;
   var h=(location.hash||"").replace("#","");
   if(h==="board"||h==="season")tab=h;
   initDb();

@@ -25,6 +25,7 @@ Friends open the page, tap a winner for each game, and save with their name and 
   "v": 1,
   "season": 2026,
   "currentWeek": 5,
+  "league": [{"name": "Josh Maine", "team": "Pretty Much 4-0"}],   // the dropdown on the page
   "weeks": {
     "5": {
       "week": 5,
@@ -46,7 +47,8 @@ Friends open the page, tap a winner for each game, and save with their name and 
 - `winner` is a team code, `"TIE"`, or `null` until final. `as`/`hs` are away/home scores.
 - `slot` is `"TNF"`, `"SNF"`, `"MNF"` or `""`.
 - Team codes: ARI ATL BAL BUF CAR CHI CIN CLE DAL DEN DET GB HOU IND JAC KC LV LAC LA (Rams) MIA MIN NE NO NYG NYJ PHI PIT SF SEA TB TEN WAS.
-- Picks are keyed by the name people type. Match names case-insensitively and replace an existing entry rather than adding a duplicate.
+- `league` is the list of people in the dropdown, shown as "Name (Team)". Picks are tied to the name. To rename a team, edit `team`; don't change `name` mid-season or that person's saved picks won't match.
+- Hand-entered picks in `state.json` are keyed by name. Match names case-insensitively and replace an existing entry rather than adding a duplicate.
 
 ## Adding picks by hand
 

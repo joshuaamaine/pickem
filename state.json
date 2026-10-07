@@ -2,6 +2,56 @@
  "v": 1,
  "season": 2026,
  "currentWeek": 5,
+ "league": [
+  {
+   "name": "Josh Maine",
+   "team": "Pretty Much 4-0"
+  },
+  {
+   "name": "Patrick Brown",
+   "team": "Victim #2"
+  },
+  {
+   "name": "Mike Crockr",
+   "team": "Mike's Magnificent Team"
+  },
+  {
+   "name": "Johnny Paredez",
+   "team": "J11"
+  },
+  {
+   "name": "Mario Sevilla",
+   "team": "Sucks Less This Week"
+  },
+  {
+   "name": "Candice Brown",
+   "team": "ACTUALLY 4-0 💀"
+  },
+  {
+   "name": "Scott Mann",
+   "team": "Armadillos"
+  },
+  {
+   "name": "Tristan Sevilla",
+   "team": "Tristan"
+  },
+  {
+   "name": "Logan Rodriguez",
+   "team": "Victim #1"
+  },
+  {
+   "name": "Stacy Krupp",
+   "team": "Beer Pressure"
+  },
+  {
+   "name": "Mallory Sevilla",
+   "team": "Collins my wins early"
+  },
+  {
+   "name": "Rob Krupp",
+   "team": "Menace II Greenbay"
+  }
+ ],
  "weeks": {
   "5": {
    "week": 5,
