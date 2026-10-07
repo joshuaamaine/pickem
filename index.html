@@ -159,6 +159,21 @@ td.big{font:800 20px var(--display)}
 .selwrap{position:relative}
 .selwrap select{appearance:none;-webkit-appearance:none;padding-right:38px;text-overflow:ellipsis}
 .selwrap::after{content:"";position:absolute;right:16px;top:50%;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.lb li{display:block;padding:0}
+.lb-row{width:100%;display:grid;grid-template-columns:26px minmax(0,1fr) auto 12px;align-items:center;gap:10px;padding:12px 14px;background:none;border:0;text-align:left;color:inherit;font:inherit;border-radius:var(--r)}
+.lb-row:hover{background:var(--sunk)}
+.chev{width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin-top:-4px;transition:transform .15s}
+.lb li.open .chev{transform:rotate(225deg);margin-top:4px}
+.lb-hint{margin-top:8px}
+.pspanel{padding:0 14px 14px}
+.pslist{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:4px}
+.ps{display:grid;grid-template-columns:minmax(0,1fr) auto 84px;gap:10px;align-items:center;padding:6px 8px;border-radius:8px;background:var(--sunk);font-size:13.5px;font-variant-numeric:tabular-nums}
+.lb li.ps{display:grid;grid-template-columns:minmax(0,1fr) auto 104px;gap:10px;align-items:center;padding:6px 8px;border-top:0}
+.ps-m{font:800 16px var(--display);letter-spacing:.02em}
+.ps-r{text-align:right;color:var(--muted);font-size:12.5px;white-space:nowrap}
+.ps.ok{background:var(--good-bg)}.ps.ok .ps-r{color:var(--good);font-weight:600}
+.ps.no{background:var(--bad-bg)}.ps.no .ps-r{color:var(--bad);font-weight:600}
+.ps-none{color:var(--muted);font-size:12.5px;min-width:48px;text-align:center}
 .tm-sub{display:block;font-size:12px;color:var(--muted);font-weight:400}
 </style>
 </head>
@@ -174,6 +189,7 @@ var SUPABASE_KEY="sb_publishable_6s-qDH_K95Qu6imiW_4cQg_sairx3oJ";
 
 var TEAMS={ARI:["Cardinals","#97233F","#FFFFFF"],ATL:["Falcons","#A71930","#FFFFFF"],BAL:["Ravens","#241773","#FFFFFF"],BUF:["Bills","#00338D","#FFFFFF"],CAR:["Panthers","#0085CA","#FFFFFF"],CHI:["Bears","#0B162A","#FFFFFF"],CIN:["Bengals","#FB4F14","#111111"],CLE:["Browns","#311D00","#FFFFFF"],DAL:["Cowboys","#003594","#FFFFFF"],DEN:["Broncos","#FB4F14","#0A2343"],DET:["Lions","#0076B6","#FFFFFF"],GB:["Packers","#203731","#FFB612"],HOU:["Texans","#03202F","#FFFFFF"],IND:["Colts","#002C5F","#FFFFFF"],JAC:["Jaguars","#006778","#FFFFFF"],KC:["Chiefs","#E31837","#FFFFFF"],LV:["Raiders","#101010","#C9CED1"],LAC:["Chargers","#0080C6","#FFFFFF"],LA:["Rams","#003594","#FFD100"],MIA:["Dolphins","#008E97","#FFFFFF"],MIN:["Vikings","#4F2683","#FFC62F"],NE:["Patriots","#002244","#FFFFFF"],NO:["Saints","#D3BC8D","#101820"],NYG:["Giants","#0B2265","#FFFFFF"],NYJ:["Jets","#125740","#FFFFFF"],PHI:["Eagles","#004C54","#FFFFFF"],PIT:["Steelers","#FFB612","#101820"],SF:["49ers","#AA0000","#FFFFFF"],SEA:["Seahawks","#002244","#69BE28"],TB:["Buccaneers","#D50A0A","#FFFFFF"],TEN:["Titans","#0C2340","#FFFFFF"],WAS:["Commanders","#5A1414","#FFB612"]};
 var app=document.getElementById("app");
+var openPlayer=null;
 var S=null,tab="picks",boardWeek=0,sheet=null,barMsg="",barErr=false,draft=null,DKEY="",saving=false,pollTimer=null;
 var db=null,DB={players:{},rows:[],loaded:false,err:"",at:0};
 
@@ -188,6 +204,7 @@ function locked(g){return Date.now()>=Date.parse(g.kickoff)}
 function fmtDay(iso){return new Date(iso).toLocaleDateString([], {weekday:"long",month:"short",day:"numeric"})}
 function fmtShortDay(iso){return new Date(iso).toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}
 function fmtShort(iso){return new Date(iso).toLocaleDateString([], {month:"short",day:"numeric"})}
+function fmtWkTime(iso){var d=new Date(iso);return d.toLocaleDateString([], {weekday:"short"})+" "+d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}
 function fmtTime(iso){return new Date(iso).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}
 function tbGame(wk){for(var i=0;i<wk.games.length;i++){if(wk.games[i].id===wk.tiebreaker)return wk.games[i]}return null}
 function hasScore(g){return g.as!=null&&g.hs!=null}
@@ -361,12 +378,22 @@ function viewBoard(){
     var isW=st.winners.indexOf(r.name)>=0,lead=!st.fin&&st.decided>0&&r.rank===1;
     var sub=(r.c+r.x)?r.c+' right, '+r.x+' wrong':r.n+' of '+wk.games.length+' picked';
     if(r.open&&(r.c+r.x))sub+=' · '+r.open+' to play';
-    var tg=tbGame(wk);
-    if(r.tb!=null&&r.tb!==""&&tg&&locked(tg))sub+=' · tiebreaker '+r.tb;
-    return '<li class="'+(r.rank===1&&st.decided?'top':'')+'"><span class="rk">'+(st.decided?r.rank:'•')+'</span><div class="who"><div class="n"><span>'+esc(r.name)+'</span>'+(isW?'<span class="pill win">Week '+boardWeek+' winner</span>':lead?'<span class="pill">Leading</span>':'')+'</div><div class="s">'+esc((teamOf(r.name)?teamOf(r.name)+' \u00B7 ':'')+sub)+'</div></div><div class="score">'+r.c+'<small>correct</small></div></li>';
+    if(r.tb!=null&&r.tb!=="")sub+=' · tiebreaker '+r.tb;
+    var open=openPlayer===r.name;
+    return '<li class="'+(r.rank===1&&st.decided?'top':'')+(open?' open':'')+'"><button type="button" class="lb-row" data-act="who" data-n="'+esc(r.name)+'" aria-expanded="'+open+'"><span class="rk">'+(st.decided?r.rank:'•')+'</span><div class="who"><div class="n"><span>'+esc(r.name)+'</span>'+(isW?'<span class="pill win">Week '+boardWeek+' winner</span>':lead?'<span class="pill">Leading</span>':'')+'</div><div class="s">'+esc((teamOf(r.name)?teamOf(r.name)+' \u00B7 ':'')+sub)+'</div></div><div class="score">'+r.c+'<small>correct</small></div><span class="chev" aria-hidden="true"></span></button>'+(open?pickSheet(st,r.name):'')+'</li>';
   }).join("")+'</ol>';
-  h+='<h2 class="sec mt">Game by game</h2><p class="note">Everyone’s picks for a game show up once it kicks off.</p><div class="games">'+wk.games.map(function(g){return boardGame(g,st.entries)}).join("")+'</div>';
+  h+='<p class="note lb-hint">Tap anyone to see all their picks.</p><h2 class="sec mt">Game by game</h2><div class="games">'+wk.games.map(function(g){return boardGame(g,st.entries)}).join("")+'</div>';
   return h;
+}
+function pickSheet(st,name){
+  var e=st.entries[name]||{p:{},tb:null},wk=st.wk;
+  var rows=wk.games.map(function(g){
+    var p=e.p[g.id],state=!p?'none':g.winner?(p===g.winner?'ok':'no'):'open';
+    var res=state==='ok'?'Right':state==='no'?'Wrong':g.winner?resultText(g):fmtWkTime(g.kickoff);
+    return '<li class="ps '+state+'"><span class="ps-m">'+g.away+' @ '+g.home+'</span>'+(p?'<span class="tchip" style="'+tstyle(p)+'">'+p+'</span>':'<span class="ps-none">No pick</span>')+'<span class="ps-r">'+esc(res)+'</span></li>';
+  }).join("");
+  var tg=tbGame(wk);
+  return '<div class="pspanel"><ul class="pslist">'+rows+'</ul>'+(tg?'<p class="note">Tiebreaker, '+tg.away+' @ '+tg.home+' total points: <b>'+(e.tb!=null&&e.tb!==""?esc(e.tb):'none')+'</b></p>':'')+'</div>';
 }
 function boardGame(g,entries){
   var by={},count=0;by[g.away]=[];by[g.home]=[];
@@ -374,7 +401,6 @@ function boardGame(g,entries){
   var lk=locked(g);
   var r=g.winner?resultText(g):lk?'Waiting on the result':fmtShortDay(g.kickoff)+', '+fmtTime(g.kickoff);
   var head='<div class="gb-h"><span class="m">'+g.away+' @ '+g.home+'</span><span class="r">'+esc(r)+'</span></div>';
-  if(!lk)return '<div class="gb">'+head+'<p class="hidden-picks">'+count+' pick'+(count===1?'':'s')+' in · revealed at kickoff</p></div>';
   function side(c){
     var cls='side'+(g.winner?(g.winner===c?' won':' lost'):''),has=by[c].length;
     return '<div class="'+cls+'"><span class="tchip" style="'+tstyle(c)+'">'+c+'</span><span class="names'+(has?'':' none')+'">'+(has?by[c].map(esc).join(", "):'No one')+'</span><span class="cnt">'+has+'</span></div>';
@@ -494,7 +520,8 @@ app.addEventListener("click",function(e){
   if(act==="save"){save()}
   else if(act==="copy-again"){if(sheet){sheet.copied=null;copyText(sheet.text);renderLayer()}}
   else if(act==="close"){sheet=null;renderLayer()}
-  else if(act==="bw"){boardWeek=Number(b.dataset.w);renderView()}
+  else if(act==="bw"){boardWeek=Number(b.dataset.w);openPlayer=null;renderView()}
+  else if(act==="who"){var wn=b.dataset.n;openPlayer=openPlayer===wn?null:wn;renderView();var ob=app.querySelector('.lb-row[aria-expanded="true"]');if(ob)ob.focus({preventScroll:true})}
 });
 app.addEventListener("input",function(e){
   var el=e.target;
