@@ -247,9 +247,9 @@
      "home": "DEN",
      "kickoff": "2026-10-16T00:15:00Z",
      "slot": "TNF",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "DEN",
+     "as": 14,
+     "hs": 17,
      "fid": null
     },
     {
