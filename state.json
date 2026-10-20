@@ -1,7 +1,7 @@
 {
  "v": 1,
  "season": 2026,
- "currentWeek": 6,
+ "currentWeek": 7,
  "league": [
   {
    "name": "Josh Maine",
@@ -239,7 +239,7 @@
     "MIN"
    ],
    "tiebreaker": "g14",
-   "mnfTotal": null,
+   "mnfTotal": 40,
    "games": [
     {
      "id": "g1",
@@ -389,6 +389,174 @@
      "away": "WAS",
      "home": "SF",
      "kickoff": "2026-10-20T00:15:00Z",
+     "slot": "MNF",
+     "winner": "SF",
+     "as": 17,
+     "hs": 23,
+     "fid": null
+    }
+   ],
+   "picks": {}
+  },
+  "7": {
+   "week": 7,
+   "byes": [
+    "BUF",
+    "JAC",
+    "LAC",
+    "WAS"
+   ],
+   "tiebreaker": "g14",
+   "mnfTotal": null,
+   "games": [
+    {
+     "id": "g1",
+     "away": "NE",
+     "home": "CHI",
+     "kickoff": "2026-10-23T00:15:00Z",
+     "slot": "TNF",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g2",
+     "away": "PIT",
+     "home": "NO",
+     "kickoff": "2026-10-25T13:30:00Z",
+     "slot": "",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g3",
+     "away": "SF",
+     "home": "ATL",
+     "kickoff": "2026-10-25T17:00:00Z",
+     "slot": "",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g4",
+     "away": "CIN",
+     "home": "BAL",
+     "kickoff": "2026-10-25T17:00:00Z",
+     "slot": "",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g5",
+     "away": "TB",
+     "home": "CAR",
+     "kickoff": "2026-10-25T17:00:00Z",
+     "slot": "",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g6",
+     "away": "NYG",
+     "home": "HOU",
+     "kickoff": "2026-10-25T17:00:00Z",
+     "slot": "",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g7",
+     "away": "IND",
+     "home": "MIN",
+     "kickoff": "2026-10-25T17:00:00Z",
+     "slot": "",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g8",
+     "away": "MIA",
+     "home": "NYJ",
+     "kickoff": "2026-10-25T17:00:00Z",
+     "slot": "",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g9",
+     "away": "CLE",
+     "home": "TEN",
+     "kickoff": "2026-10-25T17:00:00Z",
+     "slot": "",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g10",
+     "away": "DEN",
+     "home": "ARI",
+     "kickoff": "2026-10-25T20:05:00Z",
+     "slot": "",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g11",
+     "away": "GB",
+     "home": "DET",
+     "kickoff": "2026-10-25T20:25:00Z",
+     "slot": "",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g12",
+     "away": "LA",
+     "home": "LV",
+     "kickoff": "2026-10-25T20:25:00Z",
+     "slot": "",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g13",
+     "away": "KC",
+     "home": "SEA",
+     "kickoff": "2026-10-26T00:20:00Z",
+     "slot": "SNF",
+     "winner": null,
+     "as": null,
+     "hs": null,
+     "fid": null
+    },
+    {
+     "id": "g14",
+     "away": "DAL",
+     "home": "PHI",
+     "kickoff": "2026-10-27T00:15:00Z",
      "slot": "MNF",
      "winner": null,
      "as": null,
