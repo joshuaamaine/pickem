@@ -415,9 +415,9 @@
      "home": "CHI",
      "kickoff": "2026-10-23T00:15:00Z",
      "slot": "TNF",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "CHI",
+     "as": 24,
+     "hs": 30,
      "fid": null
     },
     {
