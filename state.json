@@ -426,9 +426,9 @@
      "home": "NO",
      "kickoff": "2026-10-25T13:30:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "PIT",
+     "as": 16,
+     "hs": 10,
      "fid": null
     },
     {
@@ -437,9 +437,9 @@
      "home": "ATL",
      "kickoff": "2026-10-25T17:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "ATL",
+     "as": 20,
+     "hs": 29,
      "fid": null
     },
     {
@@ -448,9 +448,9 @@
      "home": "BAL",
      "kickoff": "2026-10-25T17:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "CIN",
+     "as": 35,
+     "hs": 13,
      "fid": null
     },
     {
@@ -459,9 +459,9 @@
      "home": "CAR",
      "kickoff": "2026-10-25T17:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "TB",
+     "as": 43,
+     "hs": 13,
      "fid": null
     },
     {
@@ -470,9 +470,9 @@
      "home": "HOU",
      "kickoff": "2026-10-25T17:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "NYG",
+     "as": 27,
+     "hs": 21,
      "fid": null
     },
     {
@@ -481,9 +481,9 @@
      "home": "MIN",
      "kickoff": "2026-10-25T17:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "MIN",
+     "as": 10,
+     "hs": 16,
      "fid": null
     },
     {
@@ -492,9 +492,9 @@
      "home": "NYJ",
      "kickoff": "2026-10-25T17:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "MIA",
+     "as": 28,
+     "hs": 25,
      "fid": null
     },
     {
@@ -503,9 +503,9 @@
      "home": "TEN",
      "kickoff": "2026-10-25T17:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "CLE",
+     "as": 27,
+     "hs": 24,
      "fid": null
     },
     {
