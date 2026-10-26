@@ -514,9 +514,9 @@
      "home": "ARI",
      "kickoff": "2026-10-25T20:05:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "DEN",
+     "as": 30,
+     "hs": 16,
      "fid": null
     },
     {
@@ -525,9 +525,9 @@
      "home": "DET",
      "kickoff": "2026-10-25T20:25:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "DET",
+     "as": 17,
+     "hs": 20,
      "fid": null
     },
     {
@@ -536,9 +536,9 @@
      "home": "LV",
      "kickoff": "2026-10-25T20:25:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "LA",
+     "as": 35,
+     "hs": 21,
      "fid": null
     },
     {
@@ -547,9 +547,9 @@
      "home": "SEA",
      "kickoff": "2026-10-26T00:20:00Z",
      "slot": "SNF",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "SEA",
+     "as": 3,
+     "hs": 20,
      "fid": null
     },
     {
