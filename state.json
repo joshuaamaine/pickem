@@ -583,9 +583,9 @@
      "home": "GB",
      "kickoff": "2026-10-30T00:15:00Z",
      "slot": "TNF",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "GB",
+     "as": 19,
+     "hs": 27,
      "fid": null
     },
     {
