@@ -749,9 +749,9 @@
      "home": "BAL",
      "kickoff": "2026-11-06T01:15:00Z",
      "slot": "TNF",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "JAC",
+     "as": 33,
+     "hs": 10,
      "fid": null
     },
     {
