@@ -760,9 +760,9 @@
      "home": "ATL",
      "kickoff": "2026-11-08T14:30:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "CIN",
+     "as": 34,
+     "hs": 17,
      "fid": null
     },
     {
@@ -771,9 +771,9 @@
      "home": "CAR",
      "kickoff": "2026-11-08T18:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "DEN",
+     "as": 26,
+     "hs": 21,
      "fid": null
     },
     {
@@ -782,9 +782,9 @@
      "home": "IND",
      "kickoff": "2026-11-08T18:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "DAL",
+     "as": 27,
+     "hs": 23,
      "fid": null
     },
     {
@@ -793,9 +793,9 @@
      "home": "KC",
      "kickoff": "2026-11-08T18:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "KC",
+     "as": 12,
+     "hs": 35,
      "fid": null
     },
     {
@@ -804,9 +804,9 @@
      "home": "MIA",
      "kickoff": "2026-11-08T18:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "DET",
+     "as": 19,
+     "hs": 9,
      "fid": null
     },
     {
@@ -815,9 +815,9 @@
      "home": "NO",
      "kickoff": "2026-11-08T18:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "NO",
+     "as": 22,
+     "hs": 23,
      "fid": null
     },
     {
@@ -826,9 +826,9 @@
      "home": "PHI",
      "kickoff": "2026-11-08T18:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "NYG",
+     "as": 19,
+     "hs": 11,
      "fid": null
     },
     {
@@ -837,9 +837,9 @@
      "home": "WAS",
      "kickoff": "2026-11-08T18:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "LA",
+     "as": 20,
+     "hs": 13,
      "fid": null
     },
     {
@@ -848,9 +848,9 @@
      "home": "LAC",
      "kickoff": "2026-11-08T21:05:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "HOU",
+     "as": 44,
+     "hs": 22,
      "fid": null
     },
     {
@@ -859,9 +859,9 @@
      "home": "SF",
      "kickoff": "2026-11-08T21:25:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "SF",
+     "as": 17,
+     "hs": 38,
      "fid": null
     },
     {
@@ -870,9 +870,9 @@
      "home": "NE",
      "kickoff": "2026-11-08T21:25:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "GB",
+     "as": 45,
+     "hs": 27,
      "fid": null
     },
     {
@@ -881,9 +881,9 @@
      "home": "SEA",
      "kickoff": "2026-11-08T21:25:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "SEA",
+     "as": 3,
+     "hs": 17,
      "fid": null
     },
     {
@@ -892,9 +892,9 @@
      "home": "CHI",
      "kickoff": "2026-11-09T01:20:00Z",
      "slot": "SNF",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "CHI",
+     "as": 24,
+     "hs": 27,
      "fid": null
     },
     {
