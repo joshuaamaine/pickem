@@ -928,9 +928,9 @@
      "home": "NYG",
      "kickoff": "2026-11-13T01:15:00Z",
      "slot": "TNF",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "WAS",
+     "as": 24,
+     "hs": 21,
      "fid": null
     },
     {
