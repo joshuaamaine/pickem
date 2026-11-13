@@ -1077,7 +1077,20 @@
      "fid": null
     }
    ],
-   "picks": {}
+   "picks": {
+    "Josh Maine": {
+     "p": {
+      "g1": "WAS"
+     },
+     "tb": null
+    },
+    "Mario Sevilla": {
+     "p": {
+      "g1": "NYG"
+     },
+     "tb": null
+    }
+   }
   }
  }
 }

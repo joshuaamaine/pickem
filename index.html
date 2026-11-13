@@ -261,7 +261,11 @@ function weekEntries(n){
   var manual=wk.picks||{};
   Object.keys(manual).forEach(function(name){
     var dup=Object.keys(out).filter(function(k){return nkey(k)===nkey(name)})[0];
-    if(!dup)out[name]=manual[name];
+    if(!dup){out[name]=manual[name];return}
+    /* Hand entries (commissioner only, via state.json) fill games the person has no saved pick for. */
+    var e=out[dup],m=manual[name]||{};
+    Object.keys(m.p||{}).forEach(function(g){if(!e.p[g])e.p[g]=m.p[g]});
+    if(e.tb==null&&m.tb!=null)e.tb=m.tb;
   });
   return out;
 }
