@@ -1111,9 +1111,9 @@
      "home": "HOU",
      "kickoff": "2026-11-20T01:15:00Z",
      "slot": "TNF",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "HOU",
+     "as": 3,
+     "hs": 26,
      "fid": null
     },
     {
