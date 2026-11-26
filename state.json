@@ -1263,9 +1263,9 @@
      "home": "LA",
      "kickoff": "2026-11-26T01:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "LA",
+     "as": 13,
+     "hs": 26,
      "fid": null
     },
     {
