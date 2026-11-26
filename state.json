@@ -1434,7 +1434,14 @@
      "fid": null
     }
    ],
-   "picks": {}
+   "picks": {
+    "Mario Sevilla": {
+     "p": {
+      "g1": "GB"
+     },
+     "tb": null
+    }
+   }
   }
  }
 }
