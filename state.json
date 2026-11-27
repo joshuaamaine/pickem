@@ -1274,9 +1274,9 @@
      "home": "DET",
      "kickoff": "2026-11-26T18:00:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "CHI",
+     "as": 39,
+     "hs": 35,
      "fid": null
     },
     {
@@ -1285,9 +1285,9 @@
      "home": "DAL",
      "kickoff": "2026-11-26T21:30:00Z",
      "slot": "",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "PHI",
+     "as": 39,
+     "hs": 38,
      "fid": null
     },
     {
@@ -1296,9 +1296,9 @@
      "home": "BUF",
      "kickoff": "2026-11-27T01:20:00Z",
      "slot": "TNF",
-     "winner": null,
-     "as": null,
-     "hs": null,
+     "winner": "BUF",
+     "as": 10,
+     "hs": 13,
      "fid": null
     },
     {
